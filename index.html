@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Attendance</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; text-align: center; }
+        .hidden { display: none; }
+        .card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-top: 20px; }
+        input { width: 80%; padding: 10px; margin: 10px 0; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h1>Attendance System</h1>
+
+    <div id="admin-section">
+        <button onclick="generateQR()">Generate New Attendance QR</button>
+        <div id="qr-container" class="card hidden">
+            <img id="qr-image" src="" alt="QR Code">
+            <p>Scan to check in!</p>
+        </div>
+        
+        <h3>Live Records</h3>
+        <ul id="record-list"></ul>
+    </div>
+
+    <div id="form-section" class="card hidden">
+        <h2>Submit Attendance</h2>
+        <input type="text" id="name" placeholder="Enter Full Name">
+        <input type="text" id="roll_no" placeholder="Enter Roll Number">
+        <button onclick="submitData()">Submit</button>
+    </div>
+
+    <script>
+        // Simple routing based on URL hash or path
+        if (window.location.pathname === "/form") {
+            document.getElementById('admin-section').classList.add('hidden');
+            document.getElementById('form-section').classList.remove('hidden');
+        }
+
+        async function generateQR() {
+            const res = await fetch('/generate-qr');
+            const data = await res.json();
+            document.getElementById('qr-image').src = data.qr_code;
+            document.getElementById('qr-container').classList.remove('hidden');
+        }
+
+        async function submitData() {
+            const formData = new FormData();
+            formData.append('name', document.getElementById('name').value);
+            formData.append('roll_no', document.getElementById('roll_no').value);
+
+            const res = await fetch('/submit', { method: 'POST', body: formData });
+            const data = await res.json();
+            alert(data.message);
+        }
+
+        async function loadRecords() {
+            const res = await fetch('/records');
+            const data = await res.json();
+            const list = document.getElementById('record-list');
+            list.innerHTML = data.map(r => `<li>${r.name} (${r.roll_no})</li>`).join('');
+        }
+        
+        // Refresh records every 5 seconds for the admin
+        if (window.location.pathname !== "/form") {
+            setInterval(loadRecords, 5000);
+            loadRecords();
+        }
+    </script>
+</body>
+</html>
