@@ -23,7 +23,7 @@ async def read_form():
 @app.get("/generate-qr")
 async def generate_qr():
     # STEP 1: Find your IP (e.g., 192.168.1.15) and put it here:
-    your_ip = "10.0.15.255" 
+    your_ip = "0.0.0.0" 
     
     # STEP 2: The URL must point to your IP and port 8000
     # Note: We use /#form so the single-file index.html can detect the "page"
