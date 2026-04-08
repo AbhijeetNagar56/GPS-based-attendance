@@ -18,7 +18,8 @@ export type ActiveClass = {
 export type AttendanceRecord = {
   name: string;
   email: string;
-  distanceM: number;
+  studentLatitude: number;
+  studentLongitude: number;
   markedAt: string;
 };
 

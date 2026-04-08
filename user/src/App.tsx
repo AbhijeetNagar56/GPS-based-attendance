@@ -24,7 +24,6 @@ function App() {
   const [facultyPassword, setFacultyPassword] = useState('');
   const [faculty, setFaculty] = useState<Faculty | null>(null);
   const [className, setClassName] = useState('');
-  const [radiusM, setRadiusM] = useState(60);
 
   const facultyClasses = useMemo(() => {
     if (!faculty) {
@@ -172,7 +171,6 @@ function App() {
         body: JSON.stringify({
           email: faculty.email,
           className,
-          radiusM,
           lat: coords.lat,
           lng: coords.lng,
         }),
@@ -305,9 +303,9 @@ function App() {
         <p className="eyebrow">GPS Attendance Platform</p>
         <h1>Run location-based attendance for every live class.</h1>
         <p className="hero-copy">
-          Students can select the correct live class and mark attendance only when they are inside that
-          class&apos;s faculty radius. Faculty can run multiple subjects at the same time and manage their own
-          sessions separately.
+          Students can select the correct live class and mark attendance with their current location.
+          Faculty can run multiple subjects at the same time, manage their own sessions separately,
+          and review where each attendance entry was submitted from.
         </p>
 
         <div className="status-grid">
@@ -375,9 +373,7 @@ function App() {
             onFacultyPasswordChange={setFacultyPassword}
             onLogin={handleFacultyLogin}
             onLogout={handleFacultyLogout}
-            onRadiusChange={setRadiusM}
             onSelectFacultyClass={setSelectedFacultyClassId}
-            radiusM={radiusM}
             selectedFacultyClass={selectedFacultyClass}
             selectedFacultyClassId={selectedFacultyClassId}
           />

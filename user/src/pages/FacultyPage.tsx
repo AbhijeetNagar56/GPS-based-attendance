@@ -10,7 +10,6 @@ type FacultyPageProps = {
   facultyEmail: string;
   facultyPassword: string;
   className: string;
-  radiusM: number;
   attendance: AttendanceRecord[];
   coordsReady: boolean;
   loading: boolean;
@@ -19,7 +18,6 @@ type FacultyPageProps = {
   onLogin: (event: FormEvent<HTMLFormElement>) => void;
   onLogout: () => void;
   onClassNameChange: (value: string) => void;
-  onRadiusChange: (value: number) => void;
   onCreateClass: (event: FormEvent<HTMLFormElement>) => void;
   onSelectFacultyClass: (classId: string) => void;
   onEndClass: () => void;
@@ -34,7 +32,6 @@ export function FacultyPage({
   facultyEmail,
   facultyPassword,
   className,
-  radiusM,
   attendance,
   coordsReady,
   loading,
@@ -43,7 +40,6 @@ export function FacultyPage({
   onLogin,
   onLogout,
   onClassNameChange,
-  onRadiusChange,
   onCreateClass,
   onSelectFacultyClass,
   onEndClass,
@@ -106,17 +102,6 @@ export function FacultyPage({
               required
             />
           </label>
-          <label>
-            Allowed radius in meters
-            <input
-              value={radiusM}
-              onChange={(event) => onRadiusChange(Number(event.target.value))}
-              min={10}
-              max={500}
-              required
-              type="number"
-            />
-          </label>
           <button className="primary-button" disabled={!faculty || !coordsReady || loading} type="submit">
             Start class
           </button>
@@ -149,7 +134,9 @@ export function FacultyPage({
             {selectedFacultyClass ? (
               <div className="live-summary">
                 <p>Current class: {selectedFacultyClass.className}</p>
-                <p>Attendance radius: {selectedFacultyClass.radiusM} meters</p>
+                <p>
+                  Faculty location: {selectedFacultyClass.lat.toFixed(6)}, {selectedFacultyClass.lng.toFixed(6)}
+                </p>
                 <div className="action-row">
                   <button className="secondary-button" onClick={onEndClass} type="button">
                     End selected class
@@ -166,7 +153,7 @@ export function FacultyPage({
               </div>
             ) : null}
 
-            <p className="helper-copy">Download attendance for the selected class as a CSV file.</p>
+            <p className="helper-copy">Download attendance for the selected class with each student's marked location.</p>
 
             <div className="panel-header">
               <h2>Marked attendance</h2>
@@ -178,7 +165,9 @@ export function FacultyPage({
                   <article className="attendance-item" key={entry.email}>
                     <strong>{entry.name}</strong>
                     <span>{entry.email}</span>
-                    <small>{entry.distanceM}m from faculty location</small>
+                    <small>
+                      Marked from {entry.studentLatitude.toFixed(6)}, {entry.studentLongitude.toFixed(6)}
+                    </small>
                   </article>
                 ))}
               </div>

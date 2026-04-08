@@ -7,7 +7,6 @@ from uuid import uuid4
 
 from flask import Flask, Response, jsonify, request, send_from_directory
 from flask_cors import CORS
-from geopy.distance import geodesic
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -115,11 +114,11 @@ def build_attendance_rows(active_class):
                 "studentName": record["name"],
                 "studentEmail": record["email"],
                 "ipAddress": record["ipAddress"],
-                "distanceM": record["distanceM"],
+                "studentLatitude": record["studentLatitude"],
+                "studentLongitude": record["studentLongitude"],
                 "markedAt": record["markedAt"],
                 "classLatitude": active_class["location"][0],
                 "classLongitude": active_class["location"][1],
-                "allowedRadiusM": active_class["radius_m"],
                 "createdAt": active_class["created_at"],
             }
         )
@@ -288,27 +287,12 @@ def mark_attendance():
         if record["ipAddress"] == request_ip:
             return error("This IP address has already submitted attendance for this class.", 409)
 
-    distance = geodesic(active_class["location"], student_location).meters
-    if distance > active_class["radius_m"]:
-        return (
-            jsonify(
-                {
-                    "error": (
-                        "You are outside the attendance zone."
-                        f" Current distance: {round(distance, 2)} meters."
-                    ),
-                    "distanceM": round(distance, 2),
-                    "allowedRadiusM": active_class["radius_m"],
-                }
-            ),
-            403,
-        )
-
     record = {
         "name": name,
         "email": email,
         "ipAddress": request_ip,
-        "distanceM": round(distance, 2),
+        "studentLatitude": round(student_location[0], 6),
+        "studentLongitude": round(student_location[1], 6),
         "markedAt": iso_now(),
     }
     active_class["attendance_list"].append(record)
@@ -358,11 +342,11 @@ def export_attendance():
         "studentName",
         "studentEmail",
         "ipAddress",
-        "distanceM",
+        "studentLatitude",
+        "studentLongitude",
         "markedAt",
         "classLatitude",
         "classLongitude",
-        "allowedRadiusM",
         "createdAt",
     ]
     writer = csv.DictWriter(output, fieldnames=fieldnames)
