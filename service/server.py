@@ -1,5 +1,6 @@
 import csv
 import io
+import os
 from pathlib import Path
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -7,12 +8,15 @@ from uuid import uuid4
 from flask import Flask, Response, jsonify, request, send_from_directory
 from flask_cors import CORS
 from geopy.distance import geodesic
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIST_DIR = BASE_DIR / "user" / "dist"
+DEFAULT_PORT = 5000
 
 app = Flask(__name__, static_folder=str(FRONTEND_DIST_DIR), static_url_path="")
 CORS(app)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 
 DEFAULT_RADIUS_METERS = 60
@@ -76,9 +80,8 @@ def get_class_or_error(class_id):
 
 
 def get_request_ip():
-    forwarded_for = request.headers.get("X-Forwarded-For", "").strip()
-    if forwarded_for:
-        return forwarded_for.split(",")[0].strip()
+    if request.access_route:
+        return request.access_route[0].strip()
     return (request.remote_addr or "").strip() or "unknown"
 
 
@@ -126,6 +129,12 @@ def class_filename(active_class):
 
 
 def serve_frontend(path=""):
+    if not FRONTEND_DIST_DIR.exists():
+        return error(
+            "Frontend build not found. Build the frontend into user/dist before starting the server.",
+            500,
+        )
+
     requested_path = FRONTEND_DIST_DIR / path
     if path and requested_path.exists() and requested_path.is_file():
         return send_from_directory(FRONTEND_DIST_DIR, path)
@@ -373,4 +382,6 @@ def frontend(path):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    port = int(os.getenv("PORT", ENV.get("PORT", DEFAULT_PORT)))
+    debug = os.getenv("FLASK_DEBUG", ENV.get("FLASK_DEBUG", "0")) == "1"
+    app.run(host="0.0.0.0", port=port, debug=debug)
