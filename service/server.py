@@ -41,12 +41,16 @@ def load_env_file():
     return env_values
 
 
-ENV = load_env_file()
+FILE_ENV = load_env_file()
+
+
+def env_value(key, default=""):
+    return os.getenv(key, FILE_ENV.get(key, default))
 
 FACULTY_ACCOUNTS = {
-    ENV.get("FACULTY_EMAIL", "faculty@college.edu").strip().lower(): {
-        "name": ENV.get("FACULTY_NAME", "Faculty Admin").strip() or "Faculty Admin",
-        "password": ENV.get("FACULTY_PASSWORD", "faculty123").strip() or "faculty123",
+    env_value("FACULTY_EMAIL", "faculty@college.edu").strip().lower(): {
+        "name": env_value("FACULTY_NAME", "Faculty Admin").strip() or "Faculty Admin",
+        "password": env_value("FACULTY_PASSWORD", "faculty123").strip() or "faculty123",
     }
 }
 
@@ -382,6 +386,6 @@ def frontend(path):
 
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", ENV.get("PORT", DEFAULT_PORT)))
-    debug = os.getenv("FLASK_DEBUG", ENV.get("FLASK_DEBUG", "0")) == "1"
+    port = int(env_value("PORT", str(DEFAULT_PORT)))
+    debug = env_value("FLASK_DEBUG", "0") == "1"
     app.run(host="0.0.0.0", port=port, debug=debug)
