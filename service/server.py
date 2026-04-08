@@ -4,11 +4,14 @@ from pathlib import Path
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify, request, send_from_directory
 from flask_cors import CORS
 from geopy.distance import geodesic
 
-app = Flask(__name__)
+BASE_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_DIST_DIR = BASE_DIR / "user" / "dist"
+
+app = Flask(__name__, static_folder=str(FRONTEND_DIST_DIR), static_url_path="")
 CORS(app)
 
 
@@ -120,6 +123,14 @@ def class_filename(active_class):
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     safe_name = active_class["class_name"].strip().replace(" ", "-").lower() or "attendance"
     return f"{safe_name}-{timestamp}.csv"
+
+
+def serve_frontend(path=""):
+    requested_path = FRONTEND_DIST_DIR / path
+    if path and requested_path.exists() and requested_path.is_file():
+        return send_from_directory(FRONTEND_DIST_DIR, path)
+
+    return send_from_directory(FRONTEND_DIST_DIR, "index.html")
 
 
 @app.route("/health", methods=["GET"])
@@ -350,6 +361,15 @@ def export_attendance():
         mimetype="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{class_filename(active_class)}"'},
     )
+
+
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def frontend(path):
+    if path.startswith(("health", "login", "classes", "attendance")):
+        return error("Route not found.", 404)
+
+    return serve_frontend(path)
 
 
 if __name__ == "__main__":
